@@ -1,0 +1,186 @@
+---
+title: "DAG for SPP"
+title-slide-attributes:
+    data-background-image: seal.svg
+    data-background-size: contain
+format:
+  revealjs:
+    smaller: true
+    code-line-numbers: false
+    code-overflow: wrap
+    smooth-scroll: false
+    center: true
+    theme: [ simple, callout_custom.scss ]
+    css: callout_reveal.css
+editor_options: 
+  chunk_output_type: console
+bibliography: bib.bib
+---
+
+<style>
+div.callout-note {
+  border-left-color: #7c1d6f !important;
+}
+
+div.callout-note.callout-style-default .callout-caption {
+  background-color: #f3ebf3;
+}
+
+div.callout-tip {
+  border-left-color: #faa476 !important;
+}
+
+div.callout-tip.callout-style-default .callout-caption {
+  background-color: #fff7f3;
+}
+</style>
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+library(tidyverse)
+library(rethinking)
+library(patchwork)
+library(ggdag)
+library(prismatic)
+library(tidygraph)
+library(ggraph)
+library(ggtext)
+set.seed(42)
+
+fnt_sel <- "Josefin sans"
+clrs <- rcartocolor::carto_pal(7, "SunsetDark")[c(2,7)]
+clr_dag <- rgb(.5,.5,.5)
+clr1 <- clrs[[1]]
+
+theme_set(theme_minimal(base_family = fnt_sel)+
+            theme(panel.grid = element_blank(),
+                  axis.line = element_line(linewidth = .2),
+                  axis.ticks = element_line(linewidth = .2),
+                  plot.subtitle = element_text(hjust = .5)))
+
+plot_dag <- function(dag, clr_in = clrs[2], parse_labs = TRUE, ps = 10){
+  dag %>% 
+    ggplot(aes(x = x,  y = y, xend = xend, yend = yend)) +
+    geom_dag_edges_link(aes(edge_color = stage#,
+                            #edge_linetype = stage
+                            ),
+                        edge_width = .3,
+                        arrow = arrow(type = "closed",
+                                      length = unit(6, "pt")),
+                        start_cap = ggraph::circle(ps+1, "pt"),
+                        end_cap = ggraph::circle(ps+6, "pt")) +
+    geom_dag_point(aes(color = stage,
+                       fill = after_scale(clr_lighten(color,.7))),
+                   shape = 1, size = ps, stroke = .4) +
+    geom_dag_text(aes(label = name, color = stage),
+                  #color = "black",
+                  size = 6, parse = parse_labs,
+                  family = fnt_sel, fontface = "bold", hjust = .5, vjust = .5)+
+    scale_color_manual(values = c(predictor = "black",
+                                  exposure = clrs[[1]],
+                                  confounds = clr_dag,
+                                  response = clr_in),
+                       guide = "none") +
+    scale_edge_linetype_manual(values = c(confounds = 3,
+                                          exposure = 1,
+                                          predictor = 1,
+                                          response = 1), guide = "none") +
+    scale_edge_color_manual(values = c(confounds = "gray70",
+                                       exposure = "black",
+                                       predictor = "black",
+                                       response = "black"), guide = "none") +
+    coord_fixed(clip = "off", ratio = .5) +
+    theme_dag(base_family = fnt_sel,
+              base_size = 12) +
+    theme(plot.margin = margin(20,10,10,10),
+          plot.subtitle = element_text(hjust = .5),
+          legend.position = "bottom")
+}
+```
+
+:::: {.columns}
+::: {.column width="25%"}
+<br><br><br><br><br>
+$$
+\begin{array}{lr}
+I = \alpha_{pop[p]} + \epsilon & (1)\\
+M = \alpha_{pop[p]} + \epsilon & (2)\\
+I = \alpha + \beta_{N} N + \epsilon & (3)\\
+\end{array}
+$$
+:::
+
+
+::: {.column width="75%"}
+```{r}
+# out.width=4, out.height=2}
+gl_dag3 <- dagify(R ~ ID + S,
+                  ID ~ G + I + S,
+                  G ~ M + S,
+                  M ~ S,
+                  S ~ F + N,
+                  I ~ N,
+                  F ~ PT,
+                  N ~ PT,
+                  # F ~ T,
+                  # P ~ T,
+                  exposure = "M",
+                  outcome = "R",
+                  coords = tibble(name = c("R", "ID", "G",
+                                           "I", "M", "S",
+                                           "F", "N", "PT"#, "T"
+                  ),
+                  x = c(.3, .6, .3,
+                        .6, 0, 0,
+                        -.3, 0, -.3),
+                  y = c(.2, .5, 1,
+                        0, 1, .5,
+                        .5, 0, 0)
+                  ))
+gl_dag3 |> 
+    fortify()  |>  
+    mutate(stage = if_else(name == "R", "response",
+                           if_else(name %in% c("I", "M", "PT", "N"),
+                                   "predictor", "confounds")),
+           name = if_else(name == "PT", "P/T", name)) |>  
+    plot_dag(clr_in = clr1, ps = 15) +
+    theme(plot.margin = margin(10,10,10,10),
+          plot.caption = element_markdown(hjust = 0))
+```
+:::
+::::
+
+**R** recruitment success, **ID** inbreeding depression, **I** inbreeding, **G** genetic load, **M** mutation load, **S** selection, **N** population size, **F** food availability and **P** population at a given time point **T**.
+
+---
+
+:::: {.columns}
+::: {.column width="40%"}
+<br>
+$$
+\begin{array}{lr}
+M = \alpha_{ROH[i]} + \epsilon & (4)\\
+M = \alpha_{ROH[i,p]} + \epsilon &  (5)\\
+M / I = \alpha_{ROH[i]} + \epsilon &  (6)\\
+M / I = \alpha_{ROH[i,p]} + \epsilon &  (7)
+\end{array}
+$$
+:::
+
+::: {.column width="60%"}
+$$
+\begin{array}{rlr}
+R = &\alpha + \beta_{M} M + \epsilon & (8)\\
+R = &\alpha + \beta_{hom} M_{hom} + \beta_{het} M_{het} + \epsilon & (9)\\
+R = &\alpha + \beta_{I} I + \beta_{M} M + \beta_{IM} I \times M + \epsilon & (10)\\
+R = &\alpha + \beta_{l} M_{l} + \beta_{m} M_{m} + \beta_{s} M_{s} + & (11)\\
+	&\beta_{non-ROH} M_{non-ROH} + \epsilon\\
+R = &\alpha + \beta_{M} M + \beta_{MT} M \times T +  \epsilon & (12)\\
+R = &\alpha + \beta_{a} A_{a} + \beta_{b} A_{b} + &   (13)\\
+  &\beta_{add} A_{add} + \beta_{I} I + \beta_{T} T + \epsilon &
+\end{array}
+$$
+:::
+::::
