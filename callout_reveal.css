@@ -1,0 +1,7 @@
+div.callout-note {
+  border-left-color: #7c1d6f;
+}
+
+div.callout-note.callout-style-default .callout-caption {
+  background-color: #f3ebf3;
+}

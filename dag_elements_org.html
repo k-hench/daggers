@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.269">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Causal inference</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+
+<script src="dag_elements_org_files/libs/clipboard/clipboard.min.js"></script>
+<script src="dag_elements_org_files/libs/quarto-html/quarto.js"></script>
+<script src="dag_elements_org_files/libs/quarto-html/popper.min.js"></script>
+<script src="dag_elements_org_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="dag_elements_org_files/libs/quarto-html/anchor.min.js"></script>
+<link href="dag_elements_org_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="dag_elements_org_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="dag_elements_org_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="dag_elements_org_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="dag_elements_org_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-pipe" id="toc-the-pipe" class="nav-link active" data-scroll-target="#the-pipe">The Pipe</a></li>
+  <li><a href="#the-fork" id="toc-the-fork" class="nav-link" data-scroll-target="#the-fork">The Fork</a></li>
+  <li><a href="#the-collider" id="toc-the-collider" class="nav-link" data-scroll-target="#the-collider">The Collider</a></li>
+  <li><a href="#bad-controls" id="toc-bad-controls" class="nav-link" data-scroll-target="#bad-controls">Bad Controls</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Causal inference</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p>Taken from Richard McElreths lecture on <a href="https://www.youtube.com/watch?v=KNPYUVmY3NM">Causal Inference</a>.</p>
+<p><em>Causal inference</em> is <em>“predicting the consequences of interventions”</em> (wind/leafs) or <em>“missing data imputation”</em> (counterfactuals / Chinese landed on moon first).</p>
+<div class="cell">
+
+</div>
+<p>Why to DAG? <span class="math inline">\(\rightarrow\)</span> to sketch out causal assumptions an avoid <em>causal salad</em>.</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="causal_salad.jpg" class="img-fluid" width="319"></p>
+</div>
+</div>
+<p>Statistical models measure associations between variables. But depending on the causal dependencies, variables can interact both <em>to expose</em> OR <em>to mask</em> the influence of one variable onto another.</p>
+<p>Below are the three elemental units of a DAG together with their statistical implications.</p>
+<div class="cell">
+
+</div>
+<section id="the-pipe" class="level2">
+<h2 class="anchored" data-anchor-id="the-pipe">The Pipe</h2>
+<div class="callout-note callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+DAG structure: x <span class="math inline">\(\rightarrow\)</span> z <span class="math inline">\(\rightarrow\)</span> y
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Ignoring <code>z</code>, <code>x</code> and <code>y</code> are correlated (<span class="math inline">\(x \not\!\perp\!\!\!\perp y\)</span>)</li>
+<li>Stratified by <code>z</code>, <code>x</code> and <code>y</code> are not associated (<span class="math inline">\(x \perp\!\!\!\perp y | z\)</span>)</li>
+</ul>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n =</span> n),</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">z =</span> <span class="fu">as.numeric</span>(<span class="fu">rnorm</span>(<span class="at">n =</span> n, <span class="at">mean =</span> x) <span class="sc">&gt;</span> <span class="dv">0</span>),</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">rnorm</span>(n, <span class="at">mean =</span> <span class="fl">1.5</span><span class="sc">*</span>(z<span class="fl">-.3</span>)))</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Mc Elreth originals</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>data_mc <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">rnorm</span>(N),</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">z =</span> <span class="fu">rbern</span>(N, <span class="fu">inv_logit</span>(x)),</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>                  <span class="at">y =</span> <span class="fu">rnorm</span>(N,(<span class="dv">2</span><span class="sc">*</span>z<span class="dv">-1</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">models_and_plots</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Linear Model ignoring z
+-----------------------
+
+Call:
+lm(formula = y ~ x, data = data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-4.7708 -0.7702 -0.0249  0.7918  3.6958 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  0.26250    0.03628   7.235 9.27e-13 ***
+x            0.41529    0.03619  11.477  &lt; 2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 1.146 on 998 degrees of freedom
+Multiple R-squared:  0.1166,    Adjusted R-squared:  0.1157 
+F-statistic: 131.7 on 1 and 998 DF,  p-value: &lt; 2.2e-16
+
+Linear Model stratified by z
+----------------------------
+
+Call:
+lm(formula = y ~ x + z, data = data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-3.6150 -0.6856  0.0283  0.6495  3.3774 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) -0.47341    0.04916  -9.631   &lt;2e-16 ***
+x            0.02261    0.03701   0.611    0.541    
+z            1.43142    0.07424  19.282   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.9786 on 997 degrees of freedom
+Multiple R-squared:  0.3565,    Adjusted R-squared:  0.3553 
+F-statistic: 276.2 on 2 and 997 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fu">gg_data_mc</span>(data_mc)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># plot_data_mc(data_mc)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>p1 <span class="sc">+</span> p2 <span class="sc">+</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_layout</span>(<span class="at">guides =</span> <span class="st">"collect"</span>) <span class="sc">&amp;</span> </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="dag_elements_org_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="callout-tip callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+Scenario
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The variable <code>x</code> <em>does</em> causally influence <code>y</code> (through <code>z</code>). But if we <em>do</em> include <code>z</code> as factor in our model, <em>we can’t infer the effect</em> of <code>x</code> on <code>y</code>.</p>
+</div>
+</div>
+</section>
+<section id="the-fork" class="level2">
+<h2 class="anchored" data-anchor-id="the-fork">The Fork</h2>
+<div class="callout-note callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+DAG structure: x <span class="math inline">\(\leftarrow\)</span> z <span class="math inline">\(\rightarrow\)</span> y
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Ignoring <code>z</code>, <code>x</code> and <code>y</code> are associated (<span class="math inline">\(x \not\!\perp\!\!\!\perp y\)</span>)</li>
+<li>Stratified by <code>z</code>, <code>x</code> and <code>y</code> are not associated (<span class="math inline">\(x \perp\!\!\!\perp y | z\)</span>)</li>
+</ul>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">z =</span> <span class="fu">as.numeric</span>(<span class="fu">rnorm</span>(<span class="at">n =</span> n) <span class="sc">&gt;</span> <span class="dv">0</span>),</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n =</span> n, <span class="at">mean =</span> z) <span class="sc">*</span> <span class="fl">1.3</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">rnorm</span>(n, <span class="at">mean =</span> z) <span class="sc">*</span> <span class="fl">1.3</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Mc Elreth originals</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>data_mc <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">z =</span> <span class="fu">rbern</span>(N),</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">x =</span> <span class="fu">rnorm</span>(N,<span class="dv">2</span><span class="sc">*</span>z<span class="dv">-1</span>),</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                  <span class="at">y =</span> <span class="fu">rnorm</span>(N, (<span class="dv">2</span><span class="sc">*</span>z<span class="dv">-1</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">models_and_plots</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Linear Model ignoring z
+-----------------------
+
+Call:
+lm(formula = y ~ x, data = data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-4.8232 -1.0288  0.0329  0.9409  4.4073 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  0.54407    0.05143  10.578  &lt; 2e-16 ***
+x            0.22205    0.03296   6.737 2.73e-11 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 1.492 on 998 degrees of freedom
+Multiple R-squared:  0.0435,    Adjusted R-squared:  0.04254 
+F-statistic: 45.38 on 1 and 998 DF,  p-value: 2.731e-11
+
+Linear Model stratified by z
+----------------------------
+
+Call:
+lm(formula = y ~ x + z, data = data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-4.1576 -0.9454  0.0179  0.9337  3.9643 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  0.02160    0.05958   0.363    0.717    
+x            0.01005    0.03356   0.300    0.765    
+z            1.36820    0.09619  14.224   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 1.361 on 997 degrees of freedom
+Multiple R-squared:  0.2049,    Adjusted R-squared:  0.2033 
+F-statistic: 128.4 on 2 and 997 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fu">gg_data_mc</span>(data_mc)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># plot_data_mc(data_mc)</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>p1 <span class="sc">+</span> p2 <span class="sc">+</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_layout</span>(<span class="at">guides =</span> <span class="st">"collect"</span>) <span class="sc">&amp;</span> </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="dag_elements_org_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="callout-tip callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+Scenario
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The variable <code>x</code> <em>does not</em> causally influence <code>y</code>, their association is spurious. But if we <em>do not</em> include <code>z</code> as factor in our model, <em>we actually find an association between <code>x</code> and <code>y</code> that might erroneously be interpreted as causal</em>.</p>
+</div>
+</div>
+<div class="callout-tip callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+Fork vs.&nbsp;Pipe
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><em>“In data, the fork and the pipe are indistinguishable, but causally they are different!”</em><br> <span class="math inline">\(\rightarrow\)</span> The fork and the pipe look and behave the same in the data set, we therefore need to know their causal relationship to decide whether to include <code>z</code> in the model (or at least to know how to interpret the uncovered associations).</p>
+</div>
+</div>
+</section>
+<section id="the-collider" class="level2">
+<h2 class="anchored" data-anchor-id="the-collider">The Collider</h2>
+<div class="callout-note callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+DAG structure: x <span class="math inline">\(\rightarrow\)</span> z <span class="math inline">\(\leftarrow\)</span> y
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Ignoring <code>z</code>, <code>x</code> and <code>y</code> are not associated (<span class="math inline">\(x \perp\!\!\!\perp y\)</span>)</li>
+<li>Stratified by <code>z</code>, <code>x</code> and <code>y</code> are associated (<span class="math inline">\(x \not\!\perp\!\!\!\perp y | z\)</span>)</li>
+</ul>
+</div>
+</div>
+<div class="callout-tip callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+Restaurant Example
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><em>“A restaurant in a good location can make money EVEN IF it has bad food.”</em> and <em>“With really great food, you can survive even if you are at a bad location.”</em><br> <span class="math inline">\(\rightarrow\)</span> In the population of surviving restaurants, there is a negative correlation between how good the location is and how good the food is. But this is not because the location causes bad food and it is not because having a good chef cause a bad location. (<em>“selection bias”</em>, other example: <em>“trustworthy publications vs.&nbsp;impact factor”</em> when selection happens based both on <em>“trustworthiness”</em> AND <em>“excitingness”</em> of articles)</p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n =</span> n) <span class="sc">*</span> <span class="fl">1.3</span>,</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">rnorm</span>(<span class="at">n =</span> n) <span class="sc">*</span> <span class="fl">1.3</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">z =</span> <span class="fu">rbern</span>(N, <span class="fu">inv_logit</span>(x <span class="sc">+</span> y)))</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Mc Elreth originals</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>data_mc <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">rnorm</span>(N),</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">y =</span> <span class="fu">rnorm</span>(N),</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>                  <span class="at">z =</span> <span class="fu">rbern</span>(N, <span class="fu">inv_logit</span>(<span class="dv">2</span><span class="sc">*</span>x<span class="sc">+</span><span class="dv">2</span><span class="sc">*</span>y<span class="dv">-2</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">models_and_plots</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Linear Model ignoring z
+-----------------------
+
+Call:
+lm(formula = y ~ x, data = data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-3.8326 -0.8881 -0.0393  0.8318  4.1027 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)  0.01330    0.04130   0.322    0.748
+x            0.04439    0.03164   1.403    0.161
+
+Residual standard error: 1.306 on 998 degrees of freedom
+Multiple R-squared:  0.001969,  Adjusted R-squared:  0.0009692 
+F-statistic: 1.969 on 1 and 998 DF,  p-value: 0.1608
+
+Linear Model stratified by z
+----------------------------
+
+Call:
+lm(formula = y ~ x + z, data = data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-3.6700 -0.7763 -0.0331  0.8124  3.4635 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) -0.64496    0.05548 -11.625  &lt; 2e-16 ***
+x           -0.18191    0.03166  -5.746 1.21e-08 ***
+z            1.31327    0.08264  15.891  &lt; 2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 1.167 on 997 degrees of freedom
+Multiple R-squared:  0.2037,    Adjusted R-squared:  0.2021 
+F-statistic: 127.5 on 2 and 997 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fu">gg_data_mc</span>(data_mc)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># plot_data_mc(data_mc)</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>p1 <span class="sc">+</span> p2 <span class="sc">+</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_layout</span>(<span class="at">guides =</span> <span class="st">"collect"</span>) <span class="sc">&amp;</span> </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="dag_elements_org_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="callout-tip callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+Scenario
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The variable <code>x</code> <em>does not</em> causally influence <code>y</code>, but both act together to influence <code>z</code>. But if we <em>do</em> include <code>z</code> as factor in our model, <em>we actually find an association between <code>x</code> and <code>y</code> that might erroneously be interpreted as causal</em>.</p>
+</div>
+</div>
+<div class="callout-tip callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+Collider Bias
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Another tricky aspect of colliders is that they behave differently in terms of <em>information flow</em> within the DAG. Conditioning on a collider <em>opens</em> this node, which can create new paths of information flow from <code>x</code> to <code>y</code>. This can cause trouble for trying to block all <em>backdoor paths</em> between <code>x</code> and <code>y</code> (paths of associations between <code>x</code> and <code>y</code> that are not causal).<br> <span class="math inline">\(\rightarrow\)</span> s. also: <span class="citation" data-cites="McElreath2020">McElreath (<a href="#ref-McElreath2020" role="doc-biblioref">2020</a>)</span>, chapter 5 (<em>The Many Variables &amp; The Spurious Waffles</em>) and chapter 6 (<em>The Haunted DAG &amp; The Causal Terror</em>).</p>
+</div>
+</div>
+</section>
+<section id="bad-controls" class="level2">
+<h2 class="anchored" data-anchor-id="bad-controls">Bad Controls</h2>
+<p>Examples of cases where the variable <code>z</code> constitutes a <em>bad control</em> - that is, it should not be included when inferring the effect of <code>x</code> on <code>y</code>. Examples are based on <span class="citation" data-cites="cinelli2022">Cinelli, Forney, and Pearl (<a href="#ref-cinelli2022" role="doc-biblioref">2022</a>)</span>.</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="dag_elements_org_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<ul>
+<li><strong>M-Bias:</strong> if you condition the collider <code>z</code>, this opens a non-causal path within the DAG that contaminates the estimate of the effect of <code>x</code> on <code>y</code> (<em>backdoor criterion</em>).</li>
+<li><strong>Post-Rreatment Bias:</strong> when there is a confound <code>u</code> between <code>z</code> and <code>y</code>, conditioning on <code>z</code> might invert the inferred effect (even worse than just estimating the <em>mediator effect</em> of a pipe without an additional confound <code>u</code>) (<em>backdoor criterion</em>).</li>
+<li><strong>(Sneaky) Selection Bias:</strong> conditioning on the collider induces selection, thereby contaminating the causal estimate (<em>backdoor criterion</em>).</li>
+<li><strong>Case-Control Bias:</strong> controlling on a <em>descendent</em> of <code>y</code>, this distorts the estimation of the (causal) association between <code>x</code> and <code>y</code>.</li>
+<li><strong>Precision Parasite:</strong> conditioning on <code>z</code> effectively removes variation in <code>x</code> in the model, leading to a less precise estimate of the effect of <code>x</code> on <code>y</code> (does not bias estimates, but makes them less precise)</li>
+<li><strong>Bias Amplification:</strong> adding <code>z</code> exaggerates the bias introduced by <code>u</code> (again by removing variation in <code>x</code>)</li>
+</ul>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<div id="refs" class="references csl-bib-body hanging-indent" role="doc-bibliography">
+<div id="ref-cinelli2022" class="csl-entry" role="doc-biblioentry">
+Cinelli, Carlos, Andrew Forney, and Judea Pearl. 2022. <span>“A <span>Crash Course</span> in <span>Good</span> and <span>Bad Controls</span>.”</span> <em>Sociological Methods &amp; Research</em>, May, 00491241221099552. <a href="https://doi.org/10.1177/00491241221099552">https://doi.org/10.1177/00491241221099552</a>.
+</div>
+<div id="ref-McElreath2020" class="csl-entry" role="doc-biblioentry">
+McElreath, Richard. 2020. <em>Statistical Rethinking</em>. 2nd ed. Chapman &amp; Hall/CRC Texts in Statistical Science. London, England: CRC Press.
+</div>
+</div>
+<hr>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

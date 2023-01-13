@@ -1,0 +1,400 @@
+---
+title: "Causal inference"
+format:
+  html:
+    toc: true
+theme: [cosmo, callout_custom.scss]
+editor: visual
+editor_options: 
+  chunk_output_type: console
+bibliography: bib.bib
+---
+
+Taken from Richard McElreths lecture on [Causal Inference](https://www.youtube.com/watch?v=KNPYUVmY3NM).
+
+*Causal inference* is *"predicting the consequences of interventions"* (wind/leafs) or *"missing data imputation"* (counterfactuals / Chinese landed on moon first).
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+library(tidyverse)
+library(rethinking)
+library(patchwork)
+library(ggdag)
+library(prismatic)
+library(tidygraph)
+library(ggraph)
+set.seed(42)
+
+fnt_sel <- "Josefin sans"
+clrs <- rcartocolor::carto_pal(7, "SunsetDark")[c(2,7)]
+clr_dag <- rgb(.5,.5,.5)
+
+theme_set(theme_minimal(base_family = fnt_sel)+
+            theme(panel.grid = element_blank(),
+                  axis.line = element_line(linewidth = .2),
+                  axis.ticks = element_line(linewidth = .2),
+                  plot.subtitle = element_text(hjust = .5)))
+
+plot_dag <- function(dag, clr_in = clrs[2], parse_labs = TRUE, ps = 7){
+  dag %>% 
+    ggplot(aes(x = x,  y = y, xend = xend, yend = yend)) +
+    geom_dag_edges_link(aes(edge_color = stage#,
+                            #edge_linetype = stage
+                            ),
+                        edge_width = .3,
+                        arrow = arrow(type = "closed",
+                                      length = unit(3, "pt")),
+                        start_cap = ggraph::circle(ps+1, "pt"),
+                        end_cap = ggraph::circle(ps+6, "pt")) +
+    geom_dag_point(aes(color = stage,
+                       fill = after_scale(clr_lighten(color,.7))),
+                   shape = 1, size = ps, stroke = .4) +
+    geom_dag_text(aes(label = name, color = stage),
+                  #color = "black",
+                  size = 3.5, parse = parse_labs,
+                  family = fnt_sel, fontface = "bold", hjust = .5, vjust = .5)+
+    scale_color_manual(values = c(predictor = "black",
+                                  exposure = clrs[[1]],
+                                  confounds = clr_dag,
+                                  response = clr_in),
+                       guide = "none") +
+    scale_edge_linetype_manual(values = c(confounds = 3,
+                                          exposure = 1,
+                                          predictor = 1,
+                                          response = 1), guide = "none") +
+    scale_edge_color_manual(values = c(confounds = "gray70",
+                                       exposure = "black",
+                                       predictor = "black",
+                                       response = "black"), guide = "none") +
+    coord_fixed(clip = "off", ratio = 1) +
+      theme_dag(base_family = fnt_sel,
+                base_size = 12) +
+    theme(plot.margin = margin(20,10,10,10),
+          plot.subtitle = element_text(hjust = .5))
+}
+```
+
+Why to DAG? $\rightarrow$ to sketch out causal assumptions and avoid *causal salad*.
+
+```{r}
+#| fig.width: 5.
+#| fig.height: 3.
+#| message: false
+#| echo: false
+knitr::include_graphics("causal_salad.jpg",dpi = 300)
+```
+
+Statistical models measure associations between variables. But depending on the causal dependencies, variables can interact both *to expose* OR *to mask* the influence of one variable onto another.
+
+Below are the three elemental units of a DAG together with their statistical implications.
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+plot_data <- \(data, title = NULL){
+  data |> 
+    ggplot(aes(x = x, y = y, color = factor(z))) +
+    geom_point(alpha = .3, show.legend = FALSE) +
+    geom_smooth(method = lm, se = FALSE, fullrange = TRUE) +
+    geom_smooth(method = lm, se = FALSE, fullrange = TRUE, aes(group = 1L), color = "black",
+                linetype = 3) +
+    scale_color_manual("z", values = clrs) +
+    labs(subtitle = title)
+}
+
+sign_stars <- \(p){
+  c("***","**","*","")[cut(p, breaks = c(1,.05,.01,.001,0)) |> 
+    as.integer()]
+}
+
+smaller_4d <- \(x){
+  if_else(x == "0.0000","<10^-4",x)
+}
+
+sig_to_chr <- \(p){
+   sprintf("%.4f", p) |>
+    smaller_4d()
+}
+
+model_data <- \(data){
+  # model ignoring z
+  cat("Linear Model ignoring z\n-----------------------\n")
+  mod <- summary(lm(y ~ x, data = data))
+  mod$call |> print()
+  cat("\n")
+  mod$coefficients |> 
+    as.data.frame() |> 
+    mutate(signif = sign_stars(`Pr(>|t|)`),
+           across(`Estimate`:`Pr(>|t|)`,
+                  .fns = sig_to_chr)) |> 
+    print()
+  
+  # model stratified by z
+  cat("\nLinear Model stratified by z\n----------------------------\n")
+  mod <- summary(lm(y ~ x + z, data = data))
+  mod$call |> print()
+  cat("\n")
+  mod$coefficients |> 
+    as.data.frame() |> 
+    mutate(signif = sign_stars(`Pr(>|t|)`),
+           across(`Estimate`:`Pr(>|t|)`,
+                  .fns = sig_to_chr)) |> 
+    print()
+}
+
+# parameters
+n <- 1000 # kh n
+```
+
+## The Pipe
+
+::: callout-note
+## DAG structure: x $\rightarrow$ z $\rightarrow$ y
+
+-   Ignoring `z`, `x` and `y` are correlated ($x \not\!\perp\!\!\!\perp y$)
+-   Stratified by `z`, `x` and `y` are not associated ($x \perp\!\!\!\perp y | z$)
+:::
+
+```{r}
+#| fig.width: 7.
+#| fig.height: 4.
+#| message: false
+data <- tibble(x = rnorm(n = n),
+               z = as.numeric(rnorm(n = n, mean = x) > 0),
+               y = rnorm(n, mean = 1.5*(z-.3)))
+```
+
+```{r}
+#| fig.width: 7.
+#| fig.height: 4.
+#| message: false
+plot_data(data, "Data created by pipe")
+model_data(data)
+```
+
+::: callout-tip
+## Scenario
+
+The variable `x` *does* causally influence `y` (through `z`). But if we *do* include `z` as factor in our model, *we can't infer the effect* of `x` on `y`. We might be tricked into thinking `x` does not causally influence `y`.
+:::
+
+## The Fork
+
+::: callout-note
+## DAG structure: x $\leftarrow$ z $\rightarrow$ y
+
+-   Ignoring `z`, `x` and `y` are associated ($x \not\!\perp\!\!\!\perp y$)
+-   Stratified by `z`, `x` and `y` are not associated ($x \perp\!\!\!\perp y | z$)
+:::
+
+```{r}
+#| fig.width: 7.
+#| fig.height: 4.
+#| message: false
+data <- tibble(z = as.numeric(rnorm(n = n) > 0),
+               x = rnorm(n = n, mean = z) * 1.3,
+               y = rnorm(n, mean = z) * 1.3)
+```
+
+```{r}
+#| fig.width: 7.
+#| fig.height: 4.
+#| message: false
+plot_data(data, "Data created by fork")
+model_data(data)
+```
+
+::: callout-tip
+## Scenario
+
+The variable `x` *does not* causally influence `y`, their association is spurious. But if we *do not* include `z` as factor in our model, *we actually find an association between `x` and `y` that might erroneously be interpreted as causal*.
+:::
+
+::: callout-tip
+## Fork vs. Pipe
+
+*"In data, the fork and the pipe are indistinguishable, but causally they are different!"*<br> $\rightarrow$ The fork and the pipe look and behave the same in the data set, we therefore need to know their causal relationship to decide whether to include `z` in the model (or at least to know how to interpret the uncovered associations).
+:::
+
+## The Collider
+
+::: callout-note
+## DAG structure: x $\rightarrow$ z $\leftarrow$ y
+
+-   Ignoring `z`, `x` and `y` are not associated ($x \perp\!\!\!\perp y$)
+-   Stratified by `z`, `x` and `y` are associated ($x \not\!\perp\!\!\!\perp y | z$)
+:::
+
+::: callout-tip
+## Restaurant Example
+
+*"A restaurant in a good location can make money EVEN IF it has bad food."* and *"With really great food, you can survive even if you are at a bad location."*<br> $\rightarrow$ In the population of surviving restaurants, there is a negative correlation between how good the location is and how good the food is. But this is not because the location causes bad food and it is not because having a good chef cause a bad location. (*"selection bias"*, other example: *"trustworthy publications vs. impact factor"* when selection happens based both on *"trustworthiness"* AND *"excitingness"* of articles)
+:::
+
+```{r}
+#| fig.width: 7.
+#| fig.height: 4.
+#| message: false
+data <- tibble(x = rnorm(n = n) * 1.3,
+               y = rnorm(n = n) * 1.3,
+               z = rbern(n, inv_logit(x + y)))
+```
+
+```{r}
+#| fig.width: 7.
+#| fig.height: 4.
+#| message: false
+plot_data(data, "Data created by collider")
+model_data(data)
+```
+
+::: callout-tip
+## Scenario
+
+The variable `x` *does not* causally influence `y`, but both act together to influence `z`. But if we *do* include `z` as factor in our model, *we actually find an association between `x` and `y` that might erroneously be interpreted as causal*.
+:::
+
+::: callout-tip
+## Collider Bias
+
+Another tricky aspect of colliders is that they behave differently in terms of *information flow* within the DAG. Conditioning on a collider *opens* this node, which can create new paths of information flow from `x` to `y`. This can cause trouble for trying to block all *backdoor paths* between `x` and `y` (paths of associations between `x` and `y` that are not causal).<br> $\rightarrow$ s. also: @McElreath2020, chapter 5 (*The Many Variables & The Spurious Waffles*) and chapter 6 (*The Haunted DAG & The Causal Terror*).
+:::
+
+## Bad Controls
+
+Examples of cases where the variable `z` constitutes a *bad control* - that is, it should not be included when inferring the effect of `x` on `y`. Examples are based on @cinelli2022.
+
+```{r}
+#| fig.width: 7.
+#| fig.height: 3.
+#| message: false
+#| echo: false
+#| warning: false
+p0 <- dagify(y ~ x + v,
+       z ~ u + v,
+       x ~ u,
+       exposure = "x",
+       outcome = "y",
+       coords = tibble(name = c("x", "y", "z",
+                                "u", "v"),
+                       x = c(0, 1, .5, 0, 1),
+                       y = c(0, 0, .33, .66, .66))) |> 
+  fortify()  |>  
+  mutate(stage = if_else(name == "y", "response",
+                         if_else(name == "x", "exposure",
+                                 if_else(name %in% c("z"),
+                                         "predictor", "confounds")))) |>  
+  plot_dag(clr_in = clrs[2]) +
+  labs(subtitle = "M-Bias")
+
+p1 <- dagify(y ~ z + u,
+       z ~ x + u,
+       exposure = "x",
+       outcome = "y",
+       coords = tibble(name = c("x", "y", "z",
+                                "u"),
+                       x = c(0, 1, .33, .66),
+                       y = c(0, 0, 0, .5))) |> 
+  fortify()  |>  
+  mutate(stage = if_else(name == "y", "response",
+                         if_else(name == "x", "exposure",
+                                 if_else(name %in% c("z"),
+                                         "predictor", "confounds")))) |>  
+  plot_dag(clr_in = clrs[2]) +
+  labs(subtitle = "Post-Treatment Bias")
+
+p2 <- dagify(y ~ x,
+       z ~ x + y,
+       exposure = "x",
+       outcome = "y",
+       coords = tibble(name = c("x", "y", "z"),
+                       x = c(0, 1, .5),
+                       y = c(0, 0, .5))) |> 
+  fortify()  |>  
+  mutate(stage = if_else(name == "y", "response",
+                         if_else(name == "x", "exposure",
+                                 if_else(name %in% c("z"),
+                                 "predictor", "confounds")))) |>  
+  plot_dag(clr_in = clrs[2]) +
+  labs(subtitle = "Selection Bias")
+
+p3 <- dagify(y ~ x + u,
+       z ~ x + u,
+       exposure = "x",
+       outcome = "y",
+       coords = tibble(name = c("x", "y", "z", "u"),
+                       x = c(0, 1, .5, 1),
+                       y = c(0, 0, .5, .5))) |> 
+  fortify()  |>  
+  mutate(stage = if_else(name == "y", "response",
+                         if_else(name == "x", "exposure",
+                                 if_else(name %in% c("z"),
+                                 "predictor", "confounds")))) |>  
+  plot_dag(clr_in = clrs[2]) +
+  labs(subtitle = "Sneaky Selection Bias")
+
+p4 <- dagify(y ~ x ,
+       z ~ y,
+       exposure = "x",
+       outcome = "y",
+       coords = tibble(name = c("x", "y", "z"),
+                       x = c(0, 1, 1),
+                       y = c(0, 0, .5))) |> 
+  fortify()  |>  
+  mutate(stage = if_else(name == "y", "response",
+                         if_else(name == "x", "exposure",
+                                 if_else(name %in% c("z"),
+                                 "predictor", "confounds")))) |>  
+  plot_dag(clr_in = clrs[2]) +
+  labs(subtitle = "Case-Control Bias")
+
+p5 <- dagify(y ~ x ,
+       x ~ z,
+       exposure = "x",
+       outcome = "y",
+       coords = tibble(name = c("x", "y", "z"),
+                       x = c(0, 1, 0),
+                       y = c(0, 0, .5))) |> 
+  fortify()  |>  
+  mutate(stage = if_else(name == "y", "response",
+                         if_else(name == "x", "exposure",
+                                 if_else(name %in% c("z"),
+                                 "predictor", "confounds")))) |>  
+  plot_dag(clr_in = clrs[2]) +
+  labs(subtitle = "Precision Parasite")
+
+p6 <- dagify(y ~ x + u ,
+       x ~ z + u,
+       exposure = "x",
+       outcome = "y",
+       coords = tibble(name = c("x", "y", "z", "u"),
+                       x = c(0, 1, 0, .5),
+                       y = c(0, 0, .5, .5))) |> 
+  fortify()  |>  
+  mutate(stage = if_else(name == "y", "response",
+                         if_else(name == "x", "exposure",
+                                 if_else(name %in% c("z"),
+                                 "predictor", "confounds")))) |>  
+  plot_dag(clr_in = clrs[2]) +
+  labs(subtitle = "Bias Amplification")
+
+p0 + p1 + p2 + p3 + p4 + p5 + p6 +
+  plot_layout(ncol = 4)
+```
+
+-   **M-Bias:** if you condition the collider `z`, this opens a non-causal path within the DAG that contaminates the estimate of the effect of `x` on `y` (*backdoor criterion*).
+-   **Post-Rreatment Bias:** when there is a confound `u` between `z` and `y`, conditioning on `z` might invert the inferred effect (even worse than just estimating the *mediator effect* of a pipe without an additional confound `u`) (*backdoor criterion*).
+-   **(Sneaky) Selection Bias:** conditioning on the collider induces selection, thereby contaminating the causal estimate (*backdoor criterion*).
+-   **Case-Control Bias:** controlling on a *descendent* of `y`, this distorts the estimation of the (causal) association between `x` and `y`.
+-   **Precision Parasite:** conditioning on `z` effectively removes variation in `x` in the model, leading to a less precise estimate of the effect of `x` on `y` (does not bias estimates, but makes them less precise)
+-   **Bias Amplification:** adding `z` exaggerates bias introduced by `u` (again by removing variation in `x`)
+
+## References
+
+::: {#refs}
+:::
+
+------------------------------------------------------------------------
