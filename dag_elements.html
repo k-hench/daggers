@@ -190,9 +190,10 @@ DAG structure: x <span class="math inline">\(\rightarrow\)</span> z <span class=
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n =</span> n),</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">z =</span> <span class="fu">as.numeric</span>(<span class="fu">rnorm</span>(<span class="at">n =</span> n, <span class="at">mean =</span> x) <span class="sc">&gt;</span> <span class="dv">0</span>),</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">rnorm</span>(n, <span class="at">mean =</span> <span class="fl">1.5</span><span class="sc">*</span>(z<span class="fl">-.3</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">tibble</span>( <span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n =</span> n),</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">z =</span> <span class="fu">rbinom</span>(<span class="at">n =</span> n, <span class="at">size =</span> <span class="dv">1</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">prob =</span> <span class="fu">inv_logit</span>(x)),</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">y =</span> <span class="fu">rnorm</span>(n, <span class="at">mean =</span> <span class="fl">1.5</span><span class="sc">*</span>(z<span class="fl">-.3</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_data</span>(data, <span class="st">"Data created by pipe"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -206,17 +207,17 @@ DAG structure: x <span class="math inline">\(\rightarrow\)</span> z <span class=
 lm(formula = y ~ x, data = data)
 
             Estimate Std. Error t value Pr(&gt;|t|) signif
-(Intercept)   0.2996     0.0372  8.0457   &lt;10^-4    ***
-x             0.4009     0.0372 10.7897   &lt;10^-4    ***
+(Intercept)   0.3361     0.0381  8.8179   &lt;10^-4    ***
+x             0.2984     0.0380  7.8474   &lt;10^-4    ***
 
 Linear Model stratified by z
 ----------------------------
 lm(formula = y ~ x + z, data = data)
 
             Estimate Std. Error t value Pr(&gt;|t|) signif
-(Intercept)  -0.3967     0.0513 -7.7342   &lt;10^-4    ***
-x             0.0101     0.0394  0.2555   0.7984       
-z             1.3864     0.0789 17.5705   &lt;10^-4    ***</code></pre>
+(Intercept)  -0.4129     0.0474 -8.7055   &lt;10^-4    ***
+x            -0.0015     0.0346 -0.0435   0.9653       
+z             1.4707     0.0693 21.2071   &lt;10^-4    ***</code></pre>
 </div>
 </div>
 <div class="callout-tip callout callout-style-default callout-captioned">
@@ -252,9 +253,9 @@ DAG structure: x <span class="math inline">\(\leftarrow\)</span> z <span class="
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">z =</span> <span class="fu">as.numeric</span>(<span class="fu">rnorm</span>(<span class="at">n =</span> n) <span class="sc">&gt;</span> <span class="dv">0</span>),</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n =</span> n, <span class="at">mean =</span> z) <span class="sc">*</span> <span class="fl">1.3</span>,</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">rnorm</span>(n, <span class="at">mean =</span> z) <span class="sc">*</span> <span class="fl">1.3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">tibble</span>( <span class="at">z =</span> <span class="fu">rbinom</span>(<span class="at">n =</span> n, <span class="at">size =</span> <span class="dv">1</span>, <span class="at">prob =</span> .<span class="dv">5</span>),</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n =</span> n, <span class="at">mean =</span> <span class="fl">1.5</span> <span class="sc">*</span> z),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">y =</span> <span class="fu">rnorm</span>(<span class="at">n =</span> n, <span class="at">mean =</span> <span class="fl">1.5</span> <span class="sc">*</span> z))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_data</span>(data, <span class="st">"Data created by fork"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -268,17 +269,17 @@ DAG structure: x <span class="math inline">\(\leftarrow\)</span> z <span class="
 lm(formula = y ~ x, data = data)
 
             Estimate Std. Error t value Pr(&gt;|t|) signif
-(Intercept)   0.5094     0.0492 10.3514   &lt;10^-4    ***
-x             0.2394     0.0305  7.8546   &lt;10^-4    ***
+(Intercept)   0.4707     0.0426 11.0446   &lt;10^-4    ***
+x             0.3670     0.0296 12.3864   &lt;10^-4    ***
 
 Linear Model stratified by z
 ----------------------------
 lm(formula = y ~ x + z, data = data)
 
             Estimate Std. Error t value Pr(&gt;|t|) signif
-(Intercept)   0.0607     0.0592  1.0243   0.3060       
-x             0.0568     0.0323  1.7584   0.0790       
-z             1.1646     0.0968 12.0327   &lt;10^-4    ***</code></pre>
+(Intercept)   0.0190     0.0457  0.4151   0.6782       
+x             0.0304     0.0325  0.9350   0.3500       
+z             1.3866     0.0805 17.2199   &lt;10^-4    ***</code></pre>
 </div>
 </div>
 <div class="callout-tip callout callout-style-default callout-captioned">
@@ -356,17 +357,17 @@ Restaurant Example
 lm(formula = y ~ x, data = data)
 
             Estimate Std. Error t value Pr(&gt;|t|) signif
-(Intercept)  -0.0796     0.0413 -1.9261   0.0544       
-x             0.0086     0.0325  0.2634   0.7923       
+(Intercept)  -0.0090     0.0402 -0.2247   0.8222       
+x            -0.0132     0.0298 -0.4422   0.6585       
 
 Linear Model stratified by z
 ----------------------------
 lm(formula = y ~ x + z, data = data)
 
             Estimate Std. Error  t value Pr(&gt;|t|) signif
-(Intercept)  -0.6922     0.0532 -13.0067   &lt;10^-4    ***
-x            -0.1777     0.0313  -5.6760   &lt;10^-4    ***
-z             1.2701     0.0795  15.9675   &lt;10^-4    ***</code></pre>
+(Intercept)  -0.6629     0.0538 -12.3261   &lt;10^-4    ***
+x            -0.2212     0.0294  -7.5237   &lt;10^-4    ***
+z             1.2918     0.0794  16.2720   &lt;10^-4    ***</code></pre>
 </div>
 </div>
 <div class="callout-tip callout callout-style-default callout-captioned">
