@@ -654,19 +654,6 @@ z             1.6470     0.0811 20.2991   &lt;10^-4    ***</code></pre>
 </section>
 <section class="slide level2 center">
 
-<div class="callout callout-tip no-icon callout-captioned callout-style-default">
-<div class="callout-body">
-<div class="callout-caption">
-<p><strong>Restaurant Example</strong></p>
-</div>
-<div class="callout-content">
-<p><em>“A restaurant in a good location can make money EVEN IF it has bad food.”</em> and <em>“With really great food, you can survive even if you are at a bad location.”</em><br> <span class="math inline">\(\rightarrow\)</span> In the population of surviving restaurants, there is a negative correlation between how good the location is and how good the food is. But this is not because the location causes bad food and it is not because having a good chef cause a bad location. (<em>“selection bias”</em>, other example: <em>“trustworthy publications vs.&nbsp;impact factor”</em> when selection happens based both on <em>“trustworthiness”</em> AND <em>“excitingness”</em> of articles)</p>
-</div>
-</div>
-</div>
-</section>
-<section class="slide level2 center">
-
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>Linear Model ignoring z
@@ -711,47 +698,9 @@ z             1.2771     0.0776  16.4468   &lt;10^-4    ***</code></pre>
 </div>
 </div>
 </section>
-<section id="bad-controls" class="slide level2 center">
-<h2>Bad Controls</h2>
-<p>Examples of cases where the variable <code>z</code> constitutes a <em>bad control</em> - that is, it should not be included when inferring the effect of <code>x</code> on <code>y</code>. Examples are based on <span class="citation" data-cites="cinelli2022">Cinelli, Forney, and Pearl (<a href="#/references" role="doc-biblioref" onclick="">2022</a>)</span>.</p>
-
-<img data-src="dag_elements_pres_files/figure-revealjs/unnamed-chunk-14-1.png" width="672" class="r-stretch quarto-figure-center"></section>
-<section class="slide level2 center">
-
-<p><strong>M-Bias:</strong> if you condition the collider <code>z</code>, this opens a non-causal path within the DAG that contaminates the estimate of the effect of <code>x</code> on <code>y</code> (<em>backdoor criterion</em>).</p>
-
-<img data-src="dag_elements_pres_files/figure-revealjs/unnamed-chunk-15-1.png" width="336" class="r-stretch quarto-figure-center"></section>
-<section class="slide level2 center">
-
-<p><strong>Post-Rreatment Bias:</strong> when there is a confound <code>u</code> between <code>z</code> and <code>y</code>, conditioning on <code>z</code> might invert the inferred effect (even worse than just estimating the <em>mediator effect</em> of a pipe without an additional confound <code>u</code>) (<em>backdoor criterion</em>).</p>
-
-<img data-src="dag_elements_pres_files/figure-revealjs/unnamed-chunk-16-1.png" width="336" class="r-stretch quarto-figure-center"></section>
-<section class="slide level2 center">
-
-<p><strong>(Sneaky) Selection Bias:</strong> conditioning on the collider induces selection, thereby contaminating the causal estimate (<em>backdoor criterion</em>).</p>
-
-<img data-src="dag_elements_pres_files/figure-revealjs/unnamed-chunk-17-1.png" width="672" class="r-stretch quarto-figure-center"></section>
-<section class="slide level2 center">
-
-<p><strong>Case-Control Bias:</strong> controlling on a <em>descendent</em> of <code>y</code>, this distorts the estimation of the (causal) association between <code>x</code> and <code>y</code>.</p>
-
-<img data-src="dag_elements_pres_files/figure-revealjs/unnamed-chunk-18-1.png" width="336" class="r-stretch quarto-figure-center"></section>
-<section class="slide level2 center">
-
-<p><strong>Precision Parasite:</strong> conditioning on <code>z</code> effectively removes variation in <code>x</code> in the model, leading to a less precise estimate of the effect of <code>x</code> on <code>y</code> (does not bias estimates, but makes them less precise)</p>
-
-<img data-src="dag_elements_pres_files/figure-revealjs/unnamed-chunk-19-1.png" width="336" class="r-stretch quarto-figure-center"></section>
-<section class="slide level2 center">
-
-<p><strong>Bias Amplification:</strong> adding <code>z</code> exaggerates bias introduced by <code>u</code> (again by removing variation in <code>x</code>)</p>
-
-<img data-src="dag_elements_pres_files/figure-revealjs/unnamed-chunk-20-1.png" width="336" class="r-stretch quarto-figure-center"></section>
 <section id="references" class="slide level2 smaller scrollable">
 <h2>References</h2>
 <div id="refs" class="references csl-bib-body hanging-indent" role="doc-bibliography">
-<div id="ref-cinelli2022" class="csl-entry" role="doc-biblioentry">
-Cinelli, Carlos, Andrew Forney, and Judea Pearl. 2022. <span>“A <span>Crash Course</span> in <span>Good</span> and <span>Bad Controls</span>.”</span> <em>Sociological Methods &amp; Research</em>, May, 00491241221099552. <a href="https://doi.org/10.1177/00491241221099552">https://doi.org/10.1177/00491241221099552</a>.
-</div>
 <div id="ref-McElreath2020" class="csl-entry" role="doc-biblioentry">
 McElreath, Richard. 2020. <em>Statistical Rethinking</em>. 2nd ed. Chapman &amp; Hall/CRC Texts in Statistical Science. London, England: CRC Press.
 </div>
